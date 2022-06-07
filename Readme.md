@@ -147,3 +147,29 @@ Now if we need to set some environment variables such as some value or API keys 
 docker run -e APP_COLOR=blue <container_name>
 docker run -e APP_COLOR=red <container_name>
 ```
+
+
+### How to create a Docker image ?
+
+In order to create a docker image we need to create a file in our code folder which will execute the commands in which docker can understand.
+
+```Dockerfile
+FROM Ubuntu
+
+RUN apt-get update
+RUN apt-get install python
+
+RUN pip install flask
+RUN pip install flask-mysql
+
+COPY . ./opt/source-code
+
+ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run
+```
+
+To make our image we will use docker build command and then push to deploy it
+```bash
+docker build Dockerfile -t <image_name>/<custom_name>
+docker push <image_name>/<custom_name>
+```
+

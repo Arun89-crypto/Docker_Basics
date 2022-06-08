@@ -173,3 +173,101 @@ docker build Dockerfile -t <image_name>/<custom_name>
 docker push <image_name>/<custom_name>
 ```
 
+### ENTRYPOINT & CMD
+
+Here while making our Dockerfile we can set our command which we want to run on the system. Now we can set the command using CMD and entrypoint both Now for example we have a Ubuntu machine (ubuntu-sleeper) which is going to sleep for 5 secs and then close so the Dockerfile for this machine will look as :
+```Dockerfile
+FROM Ubuntu
+
+ENTRYPOINT ["sleep"]
+
+CMD ["5"]
+```
+
+Here we can modify the CMD input which is 5 (hard coded) by using:
+```bash
+docker run ubuntu-sleeper 10
+
+# here 10 will replace the hard coded 5
+```
+
+We can also modify the entrypoint using the (--entrypoint) tag:
+```bash
+docker run --entrypoint sleep2.0 ubuntu-sleeper 10
+```
+Now this will run ubuntu-sleeper with entry point sleep2.0 and CMD variable as 10
+
+
+### Networking in Docker containers
+
+In docker the containers are given their own IP generally in range of 172.x.x.x and all the containers in a network can access each other and if you want them to be avialable to external hosts we can map the ports using the method discussed above. Some examples :
+
+```bash
+# This will run in default network
+docker run ubuntu
+
+# This will run the container in none of the network
+docker run ubuntu --network=none
+
+# This will run the container directly on the host we don't need to map it to the host ports
+docker run ubuntu --network=host
+```
+
+#### User Defined Networks
+
+We can also define internal networks according to our need.
+```bash
+docker network ls
+```
+OUTPUT:
+```bash
+NETWORK ID     NAME      DRIVER    SCOPE
+0549525f4ad0   bridge    bridge    local
+3a74ad9d9a15   host      host      local
+c9ff82a29e73   none      null      local
+```
+
+Now to create our own network we can use command to create custom network with our own defined subnet.
+```bash
+docker network create \
+  --driver bridge \
+  --subnet 182.18.0.0/16
+  <custom_network_name>
+```
+
+To get network details of a container
+```bash
+docker inspect <container_name>
+# there will be saperate section for it
+```
+
+Now if we need to connect two services running in docker so instead of using the docker assigned IP we can simply use container name directly and it is managed by docker itself ->
+
+For Eg : 
+```bash
+---------------------------
+|    HOST    |     IP     |
+|--------------------------
+|  mysql_A   | 172.x.x.1. |
+|--------------------------
+|  nodejs1   | 172.x.x.2  |
+---------------------------
+```
+
+### Storage
+
+In docker when we build a container we cannot edit it further and it becomes a read only layer (image layer). Now if we run the container if forms a read-write layer (container layer) and that layer is modifiable but it's data will be lost if container is crashed or closed. Now the folder structure that docker uses is something like this 
+
+```bash
+/var/lib/docker
+         |
+         ---- /image
+         |
+         ---- /containers
+         |
+         ---- /network
+         |
+         .....
+```
+
+

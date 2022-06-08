@@ -256,7 +256,7 @@ For Eg :
 
 ### Storage
 
-In docker when we build a container we cannot edit it further and it becomes a read only layer (image layer). Now if we run the container if forms a read-write layer (container layer) and that layer is modifiable but it's data will be lost if container is crashed or closed. Now the folder structure that docker uses is something like this 
+In docker when we build a container we cannot edit it further and it becomes a read only layer (image layer). Now if we run the container if forms a read-write layer (container layer) and that layer is modifiable but it's data will be lost if container is crashed or closed. Now the folder structure that docker uses is something like this:
 
 ```bash
 /var/lib/docker
@@ -267,7 +267,51 @@ In docker when we build a container we cannot edit it further and it becomes a r
          |
          ---- /network
          |
+         ---- /volumes
+         |
          .....
 ```
 
+This directory is not accessible directly in MacOS so we need to run:
+```bash
+docker run -it --privileged --pid=host debian nsenter -t 1 -m -u -n -i sh
+```
 
+Now if we create a volume in docker it will create a new one in /volumes directory
+```bash
+docker volume create <volume_name>
+```
+
+Now we can map our storage with any container's storage so that our data will get stored in that
+```bash
+docker run -v <volume_name>:<image_volume_path> <image_name>
+```
+This whole volume map is known as **Volume Mounting**
+
+
+Now the another form of mounting is called **Data Mounting / Bind Mounting**
+In this situation if I have some data on the docker host and i want to mount it to my docker container then we will use :
+```bash
+docker run -v /data/<file_name>:<image_volume_path> <image_name>
+
+# using -v is an old way of doing things
+# We can use --mount a more prefferable way of doing the same thing
+
+docker run --mount type=bind,source=/data/<file_name>,target=<image_volume_path> <image_name>
+```
+
+## Docker Compose
+
+Instead of running the services saperately we can define a docker-compose.yml file which will contain all the configs which we want to run the file as. This file looks as :
+```yml
+services:
+  web:
+    image: "<image_name>/<app_folder>"
+  database:
+    image: "redis"
+```
+
+To compose a file:
+```bash
+
+```

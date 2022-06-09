@@ -310,8 +310,152 @@ services:
   database:
     image: "redis"
 ```
+This file above is a version 1 of docker_compose with no network support
 
-To compose a file:
+https://github.com/dockersamples/example-voting-app
+
+Let's take an exmaple of a simple voting application with 5 services to be linked together :
+- Redis DB
+- PostgreSQL
+- Python Application
+- Node Js Application
+- .Net service worker
+
+Now if we first write our run commands in order to generate our yml file:
 ```bash
-
+docker run -d --name=redis redis
+docker run -d --name=db postgresql:9.4
+docker run -d --name=vote -p 5000:80 --link=redis voting-app
+docker run -d --name=result -p 5001:80 --link=db result-app
+docker run -d --name=worker --link=redis --link=db
 ```
+
+Now let's generate the yml file for this 
+```yml
+redis:
+  image: redis
+db:
+  image: postgresql
+vote:
+  image: voting-app
+  ports:
+    - 5000:80
+  links:
+    - redis
+result:
+  image: result-app
+  ports:
+    - 5001:80
+  links:
+    - db
+worker:
+  image: worker
+  links:
+    - redis
+    - db
+```
+
+Now if we want to first build our image using Dockerfile then we can also use the build option here instead of using the image name. So our new YML file will be something like this:
+```yml
+redis:
+  image: redis
+db:
+  image: postgresql
+vote:
+  build: ./vote
+  ports:
+    - 5000:80
+  links:
+    - redis
+result:
+  build: ./result
+  ports:
+    - 5001:80
+  links:
+    - db
+worker:
+  build: ./worker
+  links:
+    - redis
+    - db
+```
+
+Now we also have different versions for docker-compose files v1,v2 and v3 :
+Major difference between the versions is the support of networks etc.
+
+Our same above file will become as this in version 2 of docker-compose.yml :
+```yml
+version: 2
+services:
+  redis:
+    image: redis
+  db:
+    image: postgresql
+  vote:
+    build: ./vote
+    ports:
+      - 5000:80
+    depends_on:
+      - redis
+  result:
+    build: ./result
+    ports:
+      - 5001:80
+    depends_on:
+      - db
+  worker:
+    build: ./worker
+    depends_on:
+      - redis
+      - db
+```
+
+Now if we want to add two networks front-end and back-end in our compose as:
+- Redis DB (back-end)
+- PostgreSQL (back-end)
+- Python Application (front-end)
+- Node Js Application (front-end)
+- .Net service worker (backend)
+
+```yml
+version: 2
+services:
+  redis:
+    image: redis
+    networks:
+      - back-end
+  db:
+    image: postgresql
+    networks:
+      - back-end
+  vote:
+    build: ./vote
+    ports:
+      - 5000:80
+    depends_on:
+      - redis
+    networks:
+      - back-end
+      - front-end
+  result:
+    build: ./result
+    ports:
+      - 5001:80
+    depends_on:
+      - db
+    networks:
+      - back-end
+      - front-end
+  worker:
+    build: ./worker
+    depends_on:
+      - redis
+      - db
+    networks:
+      - back-end
+
+networks:
+  - back-end
+  - front-end
+```
+

@@ -459,3 +459,108 @@ networks:
   - front-end
 ```
 
+
+## Docker Registery
+
+Now we must be thinking about where do we get our docker images when we pull or run our image. 
+For eg:
+```bash
+docker pull nginx
+```
+Here let's elaborate **nginx**
+
+originally the image looks like :
+
+```bash
+docker.io/nginx/nginx
+# Registry/(User,Account)/(Image,Repository)
+```
+
+docker.io is the default Registery for all the images we pull suppose we want to get image other than the docker.io registery we have to write the full address unlike when pulling from the docker hub.
+For eg:
+
+```bash
+docker pull gcr.io/kubernetes-e2e-test-images/dnsutils
+```
+
+### Private Registery
+
+If we want to host our private images and we don't ant anyone to access it docker provides us with private registeries that we can use which are provided with Azure and GCD platform
+
+Now to Access our private registery 
+```bash
+docker login private-registery.io
+docker run private-registory.io/apps/internal-app
+```
+
+### Deploy Your Own Private Registery
+
+Now if we want to deploy our own registery in our own docker host we can do it by using the following steps:
+```bash
+# Running our registery with a port mapping to the host
+docker run -d -p 5000:5000 --name registery registery:2
+
+# Now we will tag our image with the registery running
+docker image tag my-image localhost:5000/my-image
+
+# Pushing our image
+docker push localhost:5000/my-image
+```
+
+If we want to pull the image we can do it by
+```bash
+# If we want to pull image locally
+docker pull localhost:5000 my-image
+
+# If we want to pull image from within the network but from different host
+docker pull 192.168.56.100:5000/my-image
+```
+
+## Docker Engine
+
+Docker engine is the engine running in the system that consist of 
+- Docker CLI
+- Docker REST API
+- Docker Deamon
+
+Here CLI is what we use and Docker deamon is the process that runs with the shared resources of the system and REST API connects the both services.
+
+Now we can access the docker CLI from anywhere just by specifying the -H tag
+```bash
+docker -H=10.134.23.90:3450 run nginx
+```
+
+Now in docker the application runs own it's own by specifying the root PID to 1 but when our system runs the PID 1 is already taken so what happens is our container maps it's processes with the processes outside the container to avoid any errors and giving the independency of our host. We can also limit our resources to the container by using specific commands while running the image
+
+```bash
+# Not to exceed the CPU above 50%
+docker run --cpus=.5 ubuntu
+
+# Not to exceed the Memory 100 MB
+docker run --memory=100m ubuntu
+```
+
+## Container Orchestration
+
+If we need a stable application we need to ensure that our application is running all the time we need to make sure that our host is always reachable and If one image crashes then it should be replaced by the another instance instantly. So solution for this problem is :
+- Docker swarm
+- Mesos
+- Kubernetes
+
+
+
+## Docker Swarm
+
+Docker swarm can produce hundreds or thousands of replicas of your container on multiple hosts :
+```bash
+
+# Write this in master host
+docker swarm init
+
+# This command will provide us a command which we have to write in our worker nodes
+```
+
+Now to run the services in a swarm
+```bash
+docker services create --replicas=3 my-web-server
+```
